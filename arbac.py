@@ -117,6 +117,76 @@ for r in roles:
     if r not in s:
         rs.append(r)
 
+# simplification algorithms on the fixpoint S* after backward slicing
+# delete CA that mentions any role in R/S*
+rem = []
+remm = []
+
+for src in ca:
+    for dst in ca[src]:
+        if src in rs:
+            rem.append((src,dst))
+        elif dst in rs:
+            rem.append((src,dst))
+        elif not not_contains(rs,ca[src][dst][0]):
+            rem.append((src,dst))
+
+for r in rem:
+    del(ca[r[0]][r[1]])
+
+for src in ca:
+    if len(ca[src]) == 0:
+        remm.append(src)
+        
+for r in remm:
+    del(ca[r])
+    
+#delete CR that mentions any role in R/S*
+rem = []
+remm = []
+
+for src in cr:
+    for dst in cr[src]:
+        if src in rs:
+            rem.append((src,dst))
+        elif dst in rs:
+            rem.append((src,dst))
+
+for r in rem:
+    cr[r[0]].remove(r[1])
+
+for src in cr:
+    if len(cr[src]) == 0:
+        remm.append(src)
+        
+for r in remm:
+    del(cr[r])
+
+# delete every roles in R/S* from every CA's negative conditions
+# delete all roles in R/S*
+for r in rs:
+    roles.remove(r)
+    for src in ca:
+        for dst in ca[src]:
+            if r in ca[src][dst][1]:
+                ca[src][dst][1].remove(r)
+    
+rem = []
+remm = []
+for u in user_role:
+    for r in user_role[u]:
+        if r in rs:
+            rem.append((u,r))
+for r in rem:
+    user_role[r[0]].remove(r[1])
+
+for u in user_role:
+    if len(user_role[u]) == 0:
+        remm.append(u)
+        
+for r in remm:
+    del(user_role[r])
+
 # backward slicing
 s = dict()
 s['target'] = ''
@@ -176,11 +246,11 @@ for src in cr:
         
 for r in remm:
     del(cr[r])
-    
+
+# delete roles in R/S*    
 for r in rs:
     roles.remove(r)
     
-# delete roles in R/S*
 rem = []
 remm = []
 for u in user_role:
